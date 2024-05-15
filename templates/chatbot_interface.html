@@ -1,0 +1,287 @@
+<!-- chatbot_interface.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Code Visualization Chatbot</title>
+    <style>
+        body {
+            background-image: url('./static/images/white-fabric-texture-design-element.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+            /* background-color: #f2f2f2; */
+            /* Grey background */
+            font-family: Helvetica, sans-serif;
+            font-size: 13px;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            margin: 20px;
+        }
+
+        .sidebar {
+            width: 25%;
+            padding: 20px;
+            background-color: #f5f5f5;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+            border-radius: 5px;
+        }
+
+        .chat-container {
+            width: 75%;
+            max-width: 1000px;
+            max-height: 650px;
+            overflow: auto;
+            margin: 0 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #chat-log {
+            padding: 20px;
+            height: 450px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ccc;
+        }
+
+        #user-input {
+            display: flex;
+            padding: 10px;
+            background-color: #f5f5f5;
+        }
+
+        #query-input {
+            flex-grow: 1;
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        #submit-button {
+            padding: 8px 15px;
+            background-color: #089297;
+            /* Green button color */
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .user-message {
+            display: flex;
+            align-items: center;
+            background-color: #fefefe;
+            /* border: 1px solid rgb(202, 202, 202); */
+            color: rgb(0, 0, 0);
+            padding: 10px;
+            margin: -5px 0;
+            /* border-radius: 3px; */
+            clear: both;
+            font-weight: bold;
+        }
+
+        .bot-message {
+            background-color: #f3f4f3;
+            color: rgb(0, 0, 0);
+            /* border: 1px solid rgb(202, 202, 202); */
+            padding: 10px;
+            margin: -6px 0;
+            /* border-radius: 3px; */
+            clear: both;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+
+            .robot-logo {
+                width: 20px;
+                height: 20px;
+            }
+        }
+
+        .start-chat-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            /* Green */
+            border: none;
+            border-radius: 5px;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .start-chat-button:hover {
+            background-color: #45a049;
+        }
+
+        .conversation-box {
+            height: 370px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .conversation-item {
+            margin-bottom: 10px;
+        }
+
+        .conversation-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .conversation-item:hover {
+            background-color: #f0f0f0;
+            cursor: pointer;
+        }
+
+        .conversation-item.active {
+            background-color: #fdffd6;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>NaaS</h1>
+    <h2 style="text-align: center;">Copilot Assistant</h2>
+    <div class="container">
+        <div class="sidebar">
+            <button class="start-chat-button">Start new chat</button>
+            <h3>Recent Conversations</h3>
+            <div class="conversation-box conversation-slider">
+                <!-- Conversation items will be populated here -->
+            </div>
+        </div>
+        <div class="chat-container">
+            <div id="chat-log"></div>
+            <div id="user-input">
+                <input type="text" id="query-input" placeholder="Ask a question">
+                <button onclick="submitQuery()" id="submit-button">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function submitQuery() {
+            var userQuery = document.getElementById('query-input').value;
+            displayUserQuery(userQuery);
+
+            // Clear the input field
+            document.getElementById('query-input').value = '';
+
+            // AJAX call to send user query to Flask server
+            fetch('/process_query', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'user_query': userQuery
+                }),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            })
+                .then(response => response.json())
+                .then(data => displayChatResponse(data.response))
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Function to handle key press events in the input field
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                submitQuery();
+            }
+        }
+
+        // Attach the event listener to the input field
+        document.getElementById('query-input').addEventListener('keypress', handleKeyPress);
+
+        function displayUserQuery(query) {
+            var chatLog = document.getElementById('chat-log');
+            var userMessage = document.createElement('div');
+            userMessage.className = 'user-message';
+
+            // Add a user logo image
+            var userLogo = document.createElement('img');
+            userLogo.src = './static/images/icons8-user-chat-48.png';
+            userLogo.alt = 'User Logo';
+            userLogo.style.width = '14px';  // Set the width as per your design
+            userLogo.style.height = '14px'; // Set the height as per your design
+            userLogo.style.paddingLeft = '3px';
+            userMessage.appendChild(userLogo);
+            userMessage.innerHTML += '&nbsp&nbsp&nbsp&nbsp' + query;
+            chatLog.appendChild(userMessage);
+
+            // Add a horizontal line after the user message
+            var horizonalLine = document.createElement('hr');
+            horizonalLine.height = '1px';
+            horizonalLine.borderWidth = '0.005em';
+            horizonalLine.color = 'lightgray';
+            horizonalLine.backgroundColor = 'lightgray'
+            chatLog.appendChild(horizonalLine);
+        }
+
+        function displayChatResponse(response) {
+            var chatLog = document.getElementById('chat-log');
+            var botMessage = document.createElement('div');
+            botMessage.className = 'bot-message';
+
+            // Create a temporary container to hold the response HTML
+            var tempContainer = document.createElement('div');
+            tempContainer.innerHTML = response;
+
+            // Append each child node to the botMessage div
+            while (tempContainer.firstChild) {
+                botMessage.appendChild(tempContainer.firstChild);
+            }
+
+            chatLog.appendChild(botMessage);
+
+            // Add a horizontal line
+            var horizonalLine = document.createElement('hr');
+            horizonalLine.height = '1px';
+            horizonalLine.borderWidth = '0.01em';
+            horizonalLine.color = 'grey';
+            chatLog.appendChild(horizonalLine);
+
+            // Find and execute scripts within the botMessage div
+            executeScripts(botMessage);
+            console.log(botMessage);
+        }
+
+        // // Function to execute scripts within an HTML element
+        function executeScripts(element) {
+            var scripts = element.getElementsByTagName('script');
+            for (var i = 0; i < scripts.length; i++) {
+                eval(scripts[i].innerText);
+            }
+        }
+
+    </script>
+
+
+</body>
+
+</html>
