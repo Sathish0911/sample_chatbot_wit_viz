@@ -7,18 +7,24 @@ from flask_session import Session
 secret_key = secrets.token_hex(16)
 print(secret_key)
 
+
+app = Flask(__name__)
+
+
+
+
 # Configuring Session
-app.config['PERMANENT_SESSION_LIFETIME'] = 60  # Session Lifetime
+#app.config['PERMANENT_SESSION_LIFETIME'] = 60  # Session Lifetime
 app.config['SESSION_TYPE'] = "filesystem"  # Session Storage Type
- 
-# Path to Storing Session
+app.config['SESSION_PERMANENT'] = False 
 app.config['SESSION_FILE_DIR'] = "session_data"
+app.config['SECRET_KEY'] = secret_key
  
 # Initializing the Session Extension
 Session(app)
 # Create a flask app object
-app = Flask(__name__)
-app.config['SECRET_KEY'] = secret_key
+
+
 
 
 @app.before_request
