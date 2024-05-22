@@ -162,6 +162,14 @@
         .conversation-item.active {
             background-color: #fdffd6;
         }
+        .previous{
+            width:100%;
+            height:40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -173,9 +181,18 @@
             <button class="start-chat-button">Start new chat</button>
             <h3>Recent Conversations</h3>
             <div class="conversation-box conversation-slider">
+                <div class="previous" onclick="gotoHistory()" >  <a href="{{ url_for('chat_history') }}">Previous Chat</a></div>
                 <!-- Conversation items will be populated here -->
             </div>
         </div>
+        {% if chat_history %}
+        <div class="chat-container">
+            {% for chat in chat_history %}
+                <div class="user-query"><strong>User:</strong> {{ chat.user_query }}</div>
+                <div class="response"><strong>Bot:</strong> {{ chat.copilot_response | safe }}</div>
+            {% endfor %}
+        </div>
+        {% else %}
         <div class="chat-container">
             <div id="chat-log"></div>
             <div id="user-input">
@@ -183,6 +200,7 @@
                 <button onclick="submitQuery()" id="submit-button">Submit</button>
             </div>
         </div>
+        {% endif %}
     </div>
 
     <script>
@@ -278,7 +296,7 @@
                 eval(scripts[i].innerText);
             }
         }
-
+     
     </script>
 
 
